@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "855889485358",
+    "firebase_url": "https://api-project-855889485358.firebaseio.com",
+    "project_id": "api-project-855889485358",
+    "storage_bucket": "api-project-855889485358.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:855889485358:android:fd195ea6ca842b500d89bf",
+        "android_client_info": {
+          "package_name": "edu.cpp.cs4990.flutter_firebase_auth"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "855889485358-v1191hrkhm5f8kqjeq657vptmtrrv58k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7lk_70y2Eny8rFLmBAm96vgnW2iyQBac"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "855889485358-v1191hrkhm5f8kqjeq657vptmtrrv58k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_firebase_auth/home.dart';
+
 
 void main() => runApp(MyApp());
 
@@ -44,18 +47,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  var emailEditingController = TextEditingController();
+  var passwordEditingController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -92,20 +88,62 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'You have pushed the button this many times:',
+              'Logo',
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
+            TextField(
+              controller: emailEditingController,
+              obscureText: false,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Email',
+              ),
+            ),
+            TextField(
+              controller: passwordEditingController,
+              obscureText: true,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Password',
+              ),
+            ),
+            FlatButton(
+              child: Text("Login"),
+              onPressed: () {
+                _auth.signInWithEmailAndPassword(
+                    email: emailEditingController.text.toString(),
+                    password: passwordEditingController.text.toString())
+                    .then((value) {
+                      print("Successfully login! " + value.user.uid);
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MyNextPage(title : "Next Page", uid: value.user.uid)),
+                      );
+                }).catchError((e) {
+                  print("Failed to login! " + e.toString());
+                });
+              },
+            ),
+            FlatButton(
+              child: Text("Sign Up"),
+              onPressed: () {
+                print(emailEditingController.text.toString());
+                print(passwordEditingController.text.toString());
+
+                _auth.createUserWithEmailAndPassword(
+                    email: emailEditingController.text.toString(),
+                    password: passwordEditingController.text.toString())
+                  .then((value) {
+                    print("Successfully signed up! " + value.user.uid);
+                  }).catchError((e) {
+                    print("Failed to sign up! " + e.toString());
+                  });
+
+              },
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ) // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
