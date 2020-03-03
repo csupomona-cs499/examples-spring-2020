@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class MyNextPage extends StatefulWidget {
   MyNextPage({Key key, this.title, this.uid}) : super(key: key);
@@ -20,13 +21,25 @@ class MyNextPage extends StatefulWidget {
   _MyNextPageState createState() => _MyNextPageState();
 }
 
+
+// https://cpp.zoom.us/j/3335103143
+
+
 class _MyNextPageState extends State<MyNextPage> {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final DatabaseReference ref = FirebaseDatabase.instance.reference();
+  
+  
+  var nameEditController = TextEditingController();
+  var ageEditController = TextEditingController();
+  var majorEditController = TextEditingController();
 
   var currentUser = "Unknown";
+  var studentList = [];
 
   _MyNextPageState() {
+    print("started!");
     _auth.currentUser().then((user) {
       setState(() {
         currentUser = user.uid;
@@ -38,41 +51,103 @@ class _MyNextPageState extends State<MyNextPage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
               'Welcome ${currentUser}',
             ),
+            TextField(
+              controller: nameEditController,
+              obscureText: false,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Name',
+              ),
+            ),
+            TextField(
+              controller: ageEditController,
+              obscureText: false,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Age',
+              ),
+            ),
+            TextField(
+              controller: majorEditController,
+              obscureText: false,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Major',
+              ),
+            ),
+            RaisedButton(
+              child: Text("Add Student"),
+              onPressed: () {
+                print(nameEditController.text.toString());
+                print(ageEditController.text.toString());
+                print(majorEditController.text.toString());
+
+
+                // write a data: key, value
+                ref.child(currentUser + "/students/" + new DateTime.now().millisecondsSinceEpoch.toString()).set(
+                    {
+                      "name" : nameEditController.text.toString(),
+                      "age" : ageEditController.text.toString(),
+                      "major" : majorEditController.text.toString()
+                    }
+                ).then((res){
+                  print("Student is added ");
+                }).catchError((e) {
+                  print("Failed to add the student. " + e.toString());
+                });
+
+
+              },
+            ),
+            RaisedButton(
+              child: Text("List Students"),
+              onPressed: () {
+                ref.child(currentUser + "/students").once().then((ds){
+//                  print(ds);
+//                  print(ds.key);
+                  print(ds.value);
+
+
+
+                  var tempList = [];
+                  ds.value.forEach( (k, v) {
+                    tempList.add(v);
+                  });
+
+                  studentList.clear();
+                  setState(() {
+                    studentList = tempList;
+                  });
+
+                }).catchError((e){
+                  print("Failed to get the students. " + e.toString());
+                });
+              },
+            ),
+
+            Expanded(
+              child: ListView.builder(
+                  itemCount: studentList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Container(
+                      height: 50,
+                      child: Center(
+                          child: Text('Entry ${studentList[index]['name']}')),
+                    );
+                  }
+              ),
+            )
           ],
         ),
       ) // This trailing comma makes auto-formatting nicer for build methods.
