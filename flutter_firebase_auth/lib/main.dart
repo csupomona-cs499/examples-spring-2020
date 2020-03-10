@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_firebase_auth/home.dart';
+import 'package:firebase_database/firebase_database.dart';
 
+import 'freind_list.dart';
 
 void main() => runApp(MyApp());
 
@@ -49,8 +51,10 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final DatabaseReference ref = FirebaseDatabase.instance.reference();
 
   var emailEditingController = TextEditingController();
+  var nameEditingController = TextEditingController();
   var passwordEditingController = TextEditingController();
 
   @override
@@ -99,6 +103,14 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             TextField(
+              controller: nameEditingController,
+              obscureText: false,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Name',
+              ),
+            ),
+            TextField(
               controller: passwordEditingController,
               obscureText: true,
               decoration: InputDecoration(
@@ -117,7 +129,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => MyNextPage(title : "Next Page", uid: value.user.uid)),
+                        MaterialPageRoute(builder: (context) => FriendListPage(title : "Friend List", currentUid: value.user.uid)),
                       );
                 }).catchError((e) {
                   print("Failed to login! " + e.toString());
@@ -128,13 +140,23 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text("Sign Up"),
               onPressed: () {
                 print(emailEditingController.text.toString());
+                print(nameEditingController.text.toString());
                 print(passwordEditingController.text.toString());
 
                 _auth.createUserWithEmailAndPassword(
                     email: emailEditingController.text.toString(),
                     password: passwordEditingController.text.toString())
                   .then((value) {
+
                     print("Successfully signed up! " + value.user.uid);
+                    ref.child("users/" + value.user.uid).set({
+                      "name" : nameEditingController.text.toString()
+                    }).then((res){
+                      print("Successfully created a user in the database.");
+                    }).catchError((e) {
+                      print("Failed to create a user in the database.");
+                    });
+
                   }).catchError((e) {
                     print("Failed to sign up! " + e.toString());
                   });
