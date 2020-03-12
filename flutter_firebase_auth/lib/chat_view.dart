@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_firebase_auth/camera_view.dart';
 import "dart:math";
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:camera/camera.dart';
 
 class ChatViewPage extends StatefulWidget {
   ChatViewPage({Key key, this.title, this.currentUid, this.targetUid}) : super(key: key);
@@ -56,6 +60,11 @@ class _ChatViewState extends State<ChatViewPage> {
     });
   }
 
+  String readTimestamp(int timestamp) {
+    var now = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    return DateFormat("MM-dd-yyyy HH:mm").format(now);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,8 +81,32 @@ class _ChatViewState extends State<ChatViewPage> {
                     itemCount: chatHistoryList.length,
                     itemBuilder: (BuildContext context, int index) {
                       return Container(
-                        height: 50,
-                        child: Center(child: Text('${chatHistoryList[index]['msg']}')),
+                        margin: EdgeInsets.only(bottom: 5),
+                        alignment: widget.currentUid == chatHistoryList[index]['sender'] ? Alignment.centerRight: Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: widget.currentUid == chatHistoryList[index]['sender'] ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: <Widget>[
+                            ClipRRect(
+                                borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(10),
+                                    bottomRight: Radius.circular(10),
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10)),
+                                child: Container(
+                                    padding: EdgeInsets.all(10),
+                                    color: Colors.grey,
+                                    child:
+                                    chatHistoryList[index]['msg'].startsWith('https') ?
+                                    Image.network(chatHistoryList[index]['msg']) :
+                                    Text('${chatHistoryList[index]['msg']}')
+                                )
+                            ),
+                            Text(
+                              '${readTimestamp(chatHistoryList[index]['timestamp'])}',
+                              style: TextStyle(fontSize: 10.0),
+                            ),
+                          ],
+                        )
                       );
                     }
                 ),
@@ -104,6 +137,41 @@ class _ChatViewState extends State<ChatViewPage> {
                       }).catchError((e){
                         print("Failed to send!");
                       });
+                    },
+                  ),
+                  FlatButton(
+                    child: Text("Photo"),
+                    onPressed: () {
+                      print("photo");
+                      WidgetsFlutterBinding.ensureInitialized();
+
+                      // Obtain a list of the available cameras on the device.
+                      availableCameras().then((cameras) async {
+                        // Get a specific camera from the list of available cameras.
+                        final firstCamera = cameras.first;
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  TakePictureScreen(camera: firstCamera)),
+                        );
+                        print("Result URL: " + result);
+                        var timestamp = new DateTime.now().millisecondsSinceEpoch;
+                        ref.child("messages/" + _getChatUids() + "/" + timestamp.toString()).set({
+                          "msg" : result,
+                          "type" : "image",
+                          "sender" : widget.currentUid,
+                          "timestamp" : timestamp
+                        }).then((res){
+                          print("Send a message successfully!");
+                        }).catchError((e){
+                          print("Failed to send!");
+                        });
+
+                      });
+
+
+
                     },
                   )
                 ],

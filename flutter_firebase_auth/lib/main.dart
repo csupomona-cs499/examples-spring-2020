@@ -121,6 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
             FlatButton(
               child: Text("Login"),
               onPressed: () {
+                print("login");
                 _auth.signInWithEmailAndPassword(
                     email: emailEditingController.text.toString(),
                     password: passwordEditingController.text.toString())
